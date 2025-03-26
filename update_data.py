@@ -4,8 +4,9 @@ import pymongo
 import pandas as pd
 import pytz
 import os
+from dotenv import load_dotenv
 
-MONGO_URI = "mongodb+srv://TonHuynh:Huynhton0792@tonhuynh-mongodb.uamsm.mongodb.net/"  # Change to your MongoDB URI if needed
+MONGO_URI = os.getenv("MONGO_URI") # Change to your MongoDB URI if needed
 DATABASE_NAME = "finance2"
 
 client = pymongo.MongoClient(MONGO_URI)
