@@ -27,7 +27,7 @@
 
       try {
         // Fetch stock data from the backend API
-        const response = await fetch(`/api/stock/${ticker}`);
+        const response = await fetch(`https://startrekbobomga-stockcapstone-final.onrender.com/api/stock/${ticker}`);
         if (!response.ok) {
           throw new Error('Failed to fetch stock data');
         }

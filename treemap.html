@@ -63,7 +63,7 @@
     async function fetchStockData() {
       try {
         // Fetch tickers
-        const tickersResponse = await fetch("http://localhost:5000/api/tickers");
+        const tickersResponse = await fetch("https://startrekbobomga-stockcapstone-final.onrender.com/api/tickers");
         const tickersData = await tickersResponse.json();
         console.log("Tickers Data:", tickersData);
         const tickers = tickersData.tickers;
@@ -76,7 +76,7 @@
         const stockData = await Promise.all(
           tickers.map(async (symbol) => {
             try {
-              const response = await fetch(`http://localhost:5000/api/stock/${symbol}`);
+              const response = await fetch(`https://startrekbobomga-stockcapstone-final.onrender.com/api/stock/${symbol}`);
               const history = await response.json();
               console.log(`History for ${symbol}:`, history);
 

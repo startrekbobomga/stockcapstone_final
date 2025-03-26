@@ -150,7 +150,7 @@
         // Fetch data from local endpoint
         async function fetchData() {
             try {
-                const response = await fetch('http://localhost:5000/fear-and-greed');
+                const response = await fetch('https://startrekbobomga-stockcapstone-final.onrender.com/fear-and-greed');
                 if (!response.ok) {
                     throw new Error(`HTTP error! Status: ${response.status}`);
                 }
