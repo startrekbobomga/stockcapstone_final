@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Forecast</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="style2.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+        .container {
+            max-width: 900px;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            margin: 20px;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .input-group {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        .input-group input {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            width: 70%;
+            font-size: 16px;
+        }
+        .input-group button {
+            padding: 10px 15px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+        .input-group button:hover {
+            background: #0056b3;
+        }
+        .chart-container {
+            margin-top: 20px;
+            padding: 20px;
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        }
+        canvas {
+            width: 100% !important;
+            height: auto !important;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: center;
+        }
+        th {
+            background: #007bff;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background: #f4f4f9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Stock Forecast Analysis</h1>
+
+        <h2 id="stock-title"></h2>
+
+        <div id="input-group" class="input-group">
+            <input type="text" id="symbol" placeholder="Enter Stock Symbol (e.g. AAPL)">
+            <button onclick="fetchForecast()">Get Forecast</button>
+        </div>
+        
+        <div class="chart-container">
+            <h3>Share Price Forecast</h3>
+            <canvas id="forecastChart"></canvas>
+        </div>
+        <div class="chart-container">
+            <h3>Earnings Forecast: Actual vs. Estimate</h3>
+            <canvas id="earningsChart"></canvas>
+        </div>
+        <div class="chart-container">
+            <h3>Valuation Metrics</h3>
+            <canvas id="valuationChart"></canvas>
+        </div>
+        <div class="chart-container">
+            <h3>Consensus Recommendation</h3>
+            <canvas id="consensusChart"></canvas>
+        </div>
+        <div class="chart-container">
+            <h3>Earnings Hits/Misses</h3>
+            <canvas id="hitsMissesChart"></canvas>
+        </div>
+
+        <div id="forecast-data"></div>
+    </div>
+
+    <script>
+        let forecastChart, earningsChart, valuationChart, consensusChart, hitsMissesChart;
+
+        window.onload = async function () {
+            const urlParams = new URLSearchParams(window.location.search);
+            const ticker = urlParams.get('symbol');
+            if (ticker) {
+                document.getElementById('symbol').value = ticker ;
+                document.getElementById('input-group').style.display = 'none';
+                await fetchForecast(ticker);
+            }
+        };
+
+        async function fetchForecast(tickerFromURL = null) {
+            const symbol = tickerFromURL || document.getElementById('symbol').value.trim().toUpperCase();
+            if (!symbol) {
+                alert('Please enter a stock symbol first');
+                return;
+            }
+
+            try {
+                const response = await fetch('http://localhost:5000/api/forecast', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ticker: symbol })
+                });
+
+                if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+                const data = await response.json();
+
+                document.getElementById("stock-title").innerText = `Forecast for ${symbol}`;
+                updateForecastChart(data.actual_prices, data.forecast_mean, data.forecast_high, data.forecast_low);
+                updateEarningsChart(data.earningsActual, data.earningsEstimate);
+                updateValuationChart(data.valuation);
+                updateConsensusChart(data.consensus);
+                updateHitsMissesChart(data.hits, data.misses);
+                displayForecastData(data.forecast_mean, data.forecast_high, data.forecast_low);
+            } catch (error) {
+                console.error("Error fetching forecast:", error);
+                alert("Failed to fetch forecast data.");
+            }
+        }
+
+        function updateChart(chartInstance, canvasId, chartType, labels, datasets) {
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            if (chartInstance) chartInstance.destroy();
+            return new Chart(ctx, { type: chartType, data: { labels, datasets }, options: { responsive: true } });
+        }
+
+        function updateForecastChart(actualPrices, forecastMean, forecastHigh, forecastLow) {
+            const days = Math.max(actualPrices.length, forecastMean.length);
+            const labels = Array.from({ length: days }, (_, i) => `Day ${i + 1}`);
+            forecastChart = updateChart(forecastChart, 'forecastChart', 'line', labels, [
+                { label: 'Actual Prices', data: actualPrices, borderColor: 'black', borderWidth: 2, fill: false },
+                { label: 'Predicted Mean', data: forecastMean, borderColor: 'blue', borderDash: [5, 5], fill: false },
+                { label: 'Predicted High', data: forecastHigh, borderColor: 'green', borderDash: [2, 2], fill: false },
+                { label: 'Predicted Low', data: forecastLow, borderColor: 'red', borderDash: [2, 2], fill: false }
+            ]);
+        }
+
+        function updateEarningsChart(actual, estimate) {
+            const labels = actual.map((_, i) => `Quarter ${i + 1}`);
+            earningsChart = updateChart(earningsChart, 'earningsChart', 'bar', labels, [
+                { label: 'Actual Earnings', data: actual, backgroundColor: 'green' },
+                { label: 'Estimated Earnings', data: estimate, backgroundColor: 'orange' }
+            ]);
+        }
+
+        function updateValuationChart(valuation) {
+            const labels = Object.keys(valuation);
+            const values = Object.values(valuation);
+            valuationChart = updateChart(valuationChart, 'valuationChart', 'bar', labels, [
+                { label: 'Valuation Metrics', data: values, backgroundColor: 'purple' }
+            ]);
+        }
+
+        function updateConsensusChart(consensus) {
+            consensusChart = updateChart(consensusChart, 'consensusChart', 'pie', ['Buy', 'Hold', 'Sell'], [
+                { label: 'Consensus Recommendation', data: [consensus.buy, consensus.hold, consensus.sell], backgroundColor: ['green', 'yellow', 'red'] }
+            ]);
+        }
+
+        function updateHitsMissesChart(hits, misses) {
+            const labels = hits.map((_, i) => `Quarter ${i + 1}`);
+            hitsMissesChart = updateChart(hitsMissesChart, 'hitsMissesChart', 'bar', labels, [
+                { label: 'Hits', data: hits, backgroundColor: 'blue' },
+                { label: 'Misses', data: misses, backgroundColor: 'red' }
+            ]);
+        }
+
+        function displayForecastData(forecastMean, forecastHigh, forecastLow) {
+            let tableHTML = "<h3>Forecast Data</h3><table border='1'><tr><th>Day</th><th>Mean</th><th>High</th><th>Low</th></tr>";
+            for (let i = 0; i < forecastMean.length; i++) {
+                tableHTML += `<tr><td>Day ${i + 1}</td><td>$${forecastMean[i].toFixed(2)}</td><td>$${forecastHigh[i].toFixed(2)}</td><td>$${forecastLow[i].toFixed(2)}</td></tr>`;
+            }
+            tableHTML += "</table>";
+            document.getElementById("forecast-data").innerHTML = tableHTML;
+        }
+    </script>
+</body>
+</html>

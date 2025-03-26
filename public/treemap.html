@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Stock Treemap</title>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <style>
+    /* General Page Styles */
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f5f5f5;
+      color: #333;
+    }
+
+    h2 {
+      text-align: center;
+      margin-top: 20px;
+      color: #444;
+    }
+
+    /* Treemap Container */
+    #treemap {
+      max-width: 1200px;
+      margin: 20px auto;
+      background: #fff;
+      border: 1px solid #ddd;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      padding: 10px;
+    }
+
+    /* Tooltip Styles */
+    .tooltip {
+      position: absolute;
+      background: rgba(0, 0, 0, 0.8);
+      color: #fff;
+      padding: 8px 10px;
+      border-radius: 4px;
+      font-size: 14px;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    /* Treemap Text */
+    .treemap text {
+      fill: #fff;
+      font-size: 12px;
+      font-weight: bold;
+      text-anchor: middle;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <h2>Stock Treemap</h2>
+  <div id="treemap"></div>
+  <div class="tooltip"></div>
+
+  <script>
+    async function fetchStockData() {
+      try {
+        // Fetch tickers
+        const tickersResponse = await fetch("http://localhost:5000/api/tickers");
+        const tickersData = await tickersResponse.json();
+        console.log("Tickers Data:", tickersData);
+        const tickers = tickersData.tickers;
+        if (!tickers || !tickers.length) {
+          console.error("No tickers found.");
+          return [];
+        }
+
+        // Fetch historical data for each ticker
+        const stockData = await Promise.all(
+          tickers.map(async (symbol) => {
+            try {
+              const response = await fetch(`http://localhost:5000/api/stock/${symbol}`);
+              const history = await response.json();
+              console.log(`History for ${symbol}:`, history);
+
+              if (!history || history.length < 2) {
+                console.warn(`Not enough data for ${symbol}`);
+                return null;
+              }
+              // Use "Close" from historical data
+              const latestClose = history[history.length - 1].Close;
+              const previousClose = history[history.length - 2].Close;
+              const change = latestClose - previousClose;
+              return {
+                name: symbol,
+                // Absolute change used for area size
+                value: Math.abs(change),
+                // Raw change value for display
+                change: change,
+                color: change >= 0 ? "green" : "red"
+              };
+            } catch (err) {
+              console.error(`Error fetching history for ${symbol}:`, err);
+              return null;
+            }
+          })
+        );
+
+        const filteredData = stockData.filter(d => d !== null);
+        console.log("Filtered Stock Data:", filteredData);
+        return filteredData;
+      } catch (error) {
+        console.error("Error fetching tickers:", error);
+        return [];
+      }
+    }
+
+    async function renderTreemap() {
+      const data = await fetchStockData();
+      if (data.length === 0) {
+        d3.select("#treemap").append("p").text("No data available to render the treemap.");
+        return;
+      }
+      
+      // Increase the dimensions here
+      const width = 1200, height = 700;
+      const svg = d3.select("#treemap")
+                    .append("svg")
+                    .attr("width", width)
+                    .attr("height", height);
+
+      // Create a root node for the treemap
+      const root = d3.hierarchy({ children: data })
+                     .sum(d => d.value);
+      // Compute the treemap layout
+      d3.treemap()
+        .size([width, height])
+        .padding(2)(root);
+
+      const tooltip = d3.select(".tooltip");
+
+      // Bind data to group elements
+      const nodes = svg.selectAll("g")
+        .data(root.leaves())
+        .enter()
+        .append("g")
+        .attr("transform", d => `translate(${d.x0},${d.y0})`);
+
+      // Draw rectangles for each node
+      nodes.append("rect")
+        .attr("width", d => d.x1 - d.x0)
+        .attr("height", d => d.y1 - d.y0)
+        .attr("fill", d => d.data.color)
+        .attr("stroke", "#fff")
+        .attr("stroke-width", 2)
+        .on("mouseover", (event, d) => {
+          tooltip.transition().duration(200).style("opacity", 1);
+          tooltip.html(`<strong>${d.data.name}</strong><br>Change: ${d.data.change.toFixed(2)}`)
+            .style("left", (event.pageX + 10) + "px")
+            .style("top", (event.pageY + 10) + "px");
+        })
+        .on("mouseout", () => {
+          tooltip.transition().duration(200).style("opacity", 0);
+        });
+
+      // Add text labels for each node (using tspan for multiple lines)
+      nodes.append("text")
+        .attr("x", d => (d.x1 - d.x0) / 2)
+        .attr("y", d => (d.y1 - d.y0) / 2)
+        .attr("dy", "-0.2em")
+        .attr("text-anchor", "middle")
+        .text(d => d.data.name)
+        .style("font-size", "12px")
+        .style("pointer-events", "none")
+        .each(function(d) {
+          d3.select(this)
+            .append("tspan")
+            .attr("x", (d.x1 - d.x0) / 2)
+            .attr("dy", "1.2em")
+            .text(`(${d.data.change.toFixed(2)})`)
+            .style("font-size", "10px");
+        });
+    }
+
+    document.addEventListener("DOMContentLoaded", renderTreemap);
+  </script>
+</body>
+</html>

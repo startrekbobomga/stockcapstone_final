@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stock News</title>
+  <link rel="stylesheet" href="style1.css">
+  <script>
+    // Function to fetch and display news for the chosen ticker
+    window.onload = function() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const ticker = urlParams.get('symbol'); // Get the ticker from the URL query
+
+      if (!ticker) {
+        document.getElementById('newsContainer').innerHTML = '<p>No ticker provided!</p>';
+        return;
+      }
+
+      // Fetch news data for the ticker
+      fetch(`http://localhost:5000/api/news/${ticker}`)
+        .then(response => response.json())
+        .then(data => {
+          if (data.length === 0) {
+            document.getElementById('newsContainer').innerHTML = '<p>No recent news available for this ticker.</p>';
+          } else {
+            displayNews(data);
+          }
+        })
+        .catch(error => {
+          console.error('Error fetching news:', error);
+          document.getElementById('newsContainer').innerHTML = '<p>Error fetching news.</p>';
+        });
+    };
+
+    function displayNews(newsData) {
+      const urlParams = new URLSearchParams(window.location.search);
+      const ticker = urlParams.get('symbol'); // Get the ticker from the URL query
+      const newsContainer = document.getElementById('newsContainer');
+      let newsHtml = `<h2>Recent News for ${ticker}</h2>`; // Show ticker as part of the heading
+
+      newsData.forEach(news => {
+        newsHtml += `
+          <div class="news-item">
+            <h3 class="news-title"><a href="${news.link}" target="_blank">${news.title}</a></h3>
+            <p class="news-link">Read more: <a href="${news.link}" target="_blank">${news.link}</a></p>
+          </div>
+        `;
+      });
+
+      newsContainer.innerHTML = newsHtml;
+    }
+  </script>
+</head>
+<body>
+  <div id="newsContainer" class="news-container">
+    <!-- News articles will be displayed here -->
+  </div>
+  <a href="index.html" class="back-link">Back to Stock Data</a>
+</body>
+</html>

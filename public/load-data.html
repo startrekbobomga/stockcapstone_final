@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Load Data</title>
+  <style>
+    .response-message {
+    display: flex;
+    align-items: center;
+    font-size: 16px;
+    gap: 10px; /* Space between text and loader */
+}
+
+.circle-loader {
+    width: 20px;
+    height: 20px;
+    border: 3px solid #F9CA24; /* Yellow border color */
+    border-top: 3px solid transparent; /* Transparent for rotation effect */
+    border-radius: 50%;
+    animation: rotate 1s linear infinite;
+    display: none; /* Hidden by default */
+}
+
+@keyframes rotate {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+  </style>
+</head>
+<body>
+  <h1>Load Data Page</h1>
+  <p>Enter data to send to the server:</p>
+  <input type="text" id="dataInput" placeholder="Enter data">
+  <button onclick="sendDataToServer()">Send Data</button>
+  <p id="responseMessage1" class="response-message">
+    <span class="text"></span>
+    <span class="circle-loader"></span>
+  </p>
+  <p id="responseMessage2" class="response-message">
+    <span class="text"></span>
+    <span class="circle-loader"></span>
+  </p>
+  <p id="responseMessage3" class="response-message">
+    <span class="text"></span>
+    <span class="circle-loader"></span>
+  </p>
+
+  <button onclick="goBack()">Go Back</button>
+
+  <script>
+  async function sendDataToServer() {
+    const inputData = document.getElementById("dataInput").value.trim();
+    const responseMessage1 = document.getElementById("responseMessage1");
+    const responseMessage2 = document.getElementById("responseMessage2");
+    const responseMessage3 = document.getElementById("responseMessage3");
+
+    if (!inputData) {
+        responseMessage1.textContent = "Please enter data to send.";
+        responseMessage1.style.color = "red";
+        return;
+    }
+
+    // Split the input into an array of symbols, assuming they are comma-separated
+    const stockSymbols = inputData.split(",").map(symbol => symbol.trim());
+
+    function showLoader(element, message) {
+        const textElement = element.querySelector('.text');
+        const loaderElement = element.querySelector('.circle-loader');
+        textElement.textContent = message;
+        textElement.style.color = "#F9CA24";
+        loaderElement.style.display = "inline-block";
+    }
+
+    function hideLoader(element, message, color) {
+        const textElement = element.querySelector('.text');
+        const loaderElement = element.querySelector('.circle-loader');
+        textElement.textContent = message;
+        textElement.style.color = color;
+        loaderElement.style.display = "none";
+    }
+
+    // Show loaders
+    showLoader(responseMessage1, "Still working on historical data");
+    showLoader(responseMessage2, "Still working on news data");
+    showLoader(responseMessage3, "Still working on statistics data");
+
+    try {
+        // Run all fetch requests in parallel
+        const [historicalResponse, newsResponse, statResponse] = await Promise.all([
+            fetch("/api/run-python-gather-data", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ stockSymbols }),
+            }),
+            fetch("/api/run-python-gather-news", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ stockSymbols }),
+            }),
+            fetch("/api/run-python-gather-stat", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ stockSymbols }),
+            })
+        ]);
+
+        // Parse JSON responses in parallel
+        const [historicalResult, newsResult, statResult] = await Promise.all([
+            historicalResponse.json(),
+            newsResponse.json(),
+            statResponse.json()
+        ]);
+
+        // Handle responses
+        if (historicalResponse.ok) {
+            hideLoader(responseMessage1, "Success collected historical data ✓", "green");
+        } else {
+            hideLoader(responseMessage1, `Error: ${historicalResult.message}`, "red");
+        }
+
+        if (newsResponse.ok) {
+            hideLoader(responseMessage2, "Success collected news data ✓", "green");
+        } else {
+            hideLoader(responseMessage2, `Error: ${newsResult.message}`, "red");
+        }
+
+        if (statResponse.ok) {
+            hideLoader(responseMessage3, "Success collected statistics data ✓", "green");
+        } else {
+            hideLoader(responseMessage3, `Error: ${statResult.message}`, "red");
+        }
+
+        console.log("All fetch requests completed.");
+    } catch (error) {
+        hideLoader(responseMessage1, "Error communicating with the server.", "red");
+        hideLoader(responseMessage2, "Error communicating with the server.", "red");
+        hideLoader(responseMessage3, "Error communicating with the server.", "red");
+        console.error("Error:", error);
+    }
+}
+
+function goBack() {
+    window.history.back();
+}
+
+  </script>
+</body>
+</html>

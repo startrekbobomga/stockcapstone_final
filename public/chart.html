@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stock Price Chart</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="style2.css">
+</head>
+<body>
+    <!-- Header container -->
+  <div class="header-container">
+      <h1>Stock Price Chart</h1>
+      <a href="index.html" class="back-link">Back to Stock Data</a>
+  </div>
+  <canvas id="stockChart" width="400" height="200"></canvas>
+
+  <script>
+    window.onload = async function() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const ticker = urlParams.get('symbol');
+
+      if (!ticker) {
+        alert('No stock symbol provided.');
+        return;
+      }
+
+      try {
+        // Fetch stock data from the backend API
+        const response = await fetch(`/api/stock/${ticker}`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch stock data');
+        }
+
+        const stockData = await response.json();
+
+        if (stockData && stockData.length > 0) {
+          // Sort the data by date (convert string to Date objects)
+          stockData.sort((a, b) => new Date(a.Date) - new Date(b.Date));
+
+          // Extract formatted dates, close prices, and open prices
+          const labels = stockData.map(entry => new Date(entry.Date).toLocaleDateString());
+          const closePrices = stockData.map(entry => entry.Close);
+          const openPrices = stockData.map(entry => entry.Open);
+
+          // Create chart
+          const ctx = document.getElementById('stockChart').getContext('2d');
+          const stockChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+              labels: labels,
+              datasets: [
+                {
+                  label: `${ticker} Close Price`,
+                  data: closePrices,
+                  borderColor: 'rgba(75, 192, 192, 1)',
+                  backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                  borderWidth: 1
+                },
+                {
+                  label: `${ticker} Open Price`,
+                  data: openPrices,
+                  borderColor: 'rgba(255, 99, 132, 1)',
+                  backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                  borderWidth: 1
+                }
+              ]
+            },
+            options: {
+              responsive: true,
+              scales: {
+                x: {
+                  title: {
+                    display: true,
+                    text: 'Date'
+                  }
+                },
+                y: {
+                  title: {
+                    display: true,
+                    text: 'Price'
+                  },
+                  ticks: {
+                    beginAtZero: false
+                  }
+                }
+              },
+              plugins: {
+                legend: {
+                  labels: {
+                    font: {
+                      size: 18,
+                      weight: 'bold'
+                    }
+                  }
+                }
+              }
+            }
+          });
+        } else {
+          alert('No stock data available.');
+        }
+      } catch (error) {
+        console.error('Error fetching stock data:', error);
+        alert('Failed to fetch stock data. Please try again later.');
+      }
+    };
+  </script>
+</body>
+</html>

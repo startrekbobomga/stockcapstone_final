@@ -1,0 +1,1 @@
+Double-click the start.bat file to start the webapp

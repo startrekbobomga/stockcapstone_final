@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f4f8;
+            font-family: 'Roboto', sans-serif;
+            color: #333;
+        }
+
+        .container {
+            text-align: center;
+            background-color: #fff;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            color: #4CAF50;
+        }
+
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            margin: 10px;
+            font-size: 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+
+        button:hover {
+            background-color: #45a049;
+            transform: translateY(-2px);
+        }
+
+        button:focus {
+            outline: none;
+        }
+
+        button:active {
+            transform: translateY(2px);
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Welcome to AI Tools</h1>
+        <button onclick="navigateToOpenAIPage()">OPENAI</button>
+        <button onclick="navigateToDeepSeekPage()">DEEPSEEK</button>
+        <button onclick="navigateToAnthropicPage()">ANTHROPIC</button>
+    </div>
+
+    <script>
+        function navigateToOpenAIPage() {
+            // Add your navigation logic here
+            window.location.href = 'openai.html';  // Example URL, change as needed
+        }
+
+        function navigateToDeepSeekPage() {
+            // Add your navigation logic here
+            window.location.href = 'deepseek.html';  // Example URL, change as needed
+        }
+
+        function navigateToAnthropicPage() {
+            // Add your navigation logic here
+            window.location.href = 'anthropic.html';  // Example URL, change as needed
+        }
+    </script>
+</body>
+</html>

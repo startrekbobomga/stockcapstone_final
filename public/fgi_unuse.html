@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Fear & Greed Index</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 20px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #chart_div {
+            width: 100%;
+            height: 400px;
+            position: relative;
+        }
+
+        .category-label {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 20px 0;
+            padding: 10px 20px;
+            border-radius: 25px;
+            transition: background-color 0.3s ease;
+        }
+
+        .last-updated {
+            color: #666;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+        }
+
+        .gauge-text {
+            font-size: 24px;
+            font-weight: bold;
+            text-anchor: middle;
+        }
+    </style>
+</head>
+<body>
+    <h1>Fear & Greed Index</h1>
+    
+    <div class="container">
+        <div id="chart_div"></div>
+        <div id="categoryLabel" class="category-label">--</div>
+        <div class="last-updated" id="lastUpdated">Loading...</div>
+    </div>
+
+    <script>
+        // Initialize SVG
+        const width = 600;
+        const height = 400;
+        const margin = { top: 40, right: 40, bottom: 40, left: 40 };
+        const gaugeWidth = width - margin.left - margin.right;
+        const gaugeHeight = height - margin.top - margin.bottom;
+        const radius = Math.min(gaugeWidth, gaugeHeight) / 2;
+        
+        const svg = d3.select("#chart_div")
+            .append("svg")
+            .attr("width", "100%")
+            .attr("height", "100%")
+            .attr("viewBox", `0 0 ${width} ${height}`)
+            .attr("preserveAspectRatio", "xMidYMid meet")
+            .append("g")
+            .attr("transform", `translate(${width/2}, ${height/2})`);
+            
+        // Define gauge parameters
+        const gaugeConfig = {
+            minValue: 0,
+            maxValue: 100,
+            arcColorFn: d => {
+                if (d >= 0 && d < 20) return "#ff4444";      // Extreme Fear
+                if (d >= 20 && d < 40) return "#ff9999";     // Fear
+                if (d >= 40 && d < 60) return "#dddddd";     // Neutral
+                if (d >= 60 && d < 80) return "#99ff99";     // Greed
+                return "#44ff44";                            // Extreme Greed
+            }
+        };
+        
+        // Create scale
+        const scale = d3.scaleLinear()
+            .domain([gaugeConfig.minValue, gaugeConfig.maxValue])
+            .range([0, 1]);
+            
+        // Gauge background
+        const backgroundArc = d3.arc()
+            .innerRadius(radius * 0.7)
+            .outerRadius(radius)
+            .startAngle(-Math.PI / 2)
+            .endAngle(Math.PI / 2);
+            
+        svg.append("path")
+            .attr("class", "background-arc")
+            .attr("d", backgroundArc)
+            .attr("fill", "#f0f0f0");
+            
+        // Create color arcs
+        const createColorArc = (startValue, endValue, color) => {
+            const startAngle = -Math.PI / 2 + scale(startValue) * Math.PI;
+            const endAngle = -Math.PI / 2 + scale(endValue) * Math.PI;
+            
+            const colorArc = d3.arc()
+                .innerRadius(radius * 0.7)
+                .outerRadius(radius)
+                .startAngle(startAngle)
+                .endAngle(endAngle);
+                
+            svg.append("path")
+                .attr("class", "color-arc")
+                .attr("d", colorArc)
+                .attr("fill", color);
+        };
+        
+        // Add color segments
+        createColorArc(0, 20, "#ff4444");    // Extreme Fear
+        createColorArc(20, 40, "#ff9999");   // Fear
+        createColorArc(40, 60, "#dddddd");   // Neutral
+        createColorArc(60, 80, "#99ff99");   // Greed
+        createColorArc(80, 100, "#44ff44");  // Extreme Greed
+        
+        // Just add labels for min and max values without ticks
+        svg.append("text")
+            .attr("x", -(radius + 15))
+            .attr("y", 0)
+            .attr("text-anchor", "end")
+            .attr("dominant-baseline", "middle")
+            .text("0");
+            
+        svg.append("text")
+            .attr("x", (radius + 15))
+            .attr("y", 0)
+            .attr("text-anchor", "start")
+            .attr("dominant-baseline", "middle")
+            .text("100");
+            
+        // Add "100" label at the bottom
+        svg.append("text")
+            .attr("x", 0)
+            .attr("y", radius + 40)
+            .attr("text-anchor", "middle");
+
+        
+        // Add needle
+        const needleGroup = svg.append("g")
+            .attr("class", "needle-group");
+            
+        const needleLine = needleGroup.append("line")
+            .attr("class", "needle")
+            .attr("x1", 0)
+            .attr("y1", 0)
+            .attr("x2", 0)
+            .attr("y2", -radius * 0.8)
+            .attr("stroke", "#333")
+            .attr("stroke-width", 3);
+            
+        // Add needle circle
+        needleGroup.append("circle")
+            .attr("cx", 0)
+            .attr("cy", 0)
+            .attr("r", radius * 0.1)
+            .attr("fill", "#333");
+            
+        // Value text
+        const valueText = svg.append("text")
+            .attr("class", "gauge-text")
+            .attr("x", 0)
+            .attr("y", radius * 0.3)
+            .text("0");
+            
+        // Function to update needle position
+        function updateNeedle(value) {
+            const newAngle = -90 + (value / 100 * 180);
+            
+            needleGroup
+                .transition()
+                .duration(1000)
+                .ease(d3.easeElasticOut)
+                .attr("transform", `rotate(${newAngle})`);
+                
+            valueText
+                .transition()
+                .duration(500)
+                .tween("text", function() {
+                    const i = d3.interpolate(parseFloat(this.textContent), value);
+                    return function(t) {
+                        this.textContent = Math.round(i(t));
+                    };
+                });
+        }
+        
+        function getCategory(score) {
+            if (score < 20) return { label: "Extreme Fear", color: "#ff4444" };
+            if (score < 40) return { label: "Fear", color: "#ff9999" };
+            if (score < 60) return { label: "Neutral", color: "#dddddd" };
+            if (score < 80) return { label: "Greed", color: "#99ff99" };
+            return { label: "Extreme Greed", color: "#44ff44" };
+        }
+
+        async function fetchData() {
+            try {
+                const response = await fetch('http://localhost:5000/fear-and-greed');
+                const json = await response.json();
+                return json.fear_and_greed;
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                // For testing, return mock data
+                return {
+                    score: 14,
+                    timestamp: new Date().toISOString()
+                };
+            }
+        }
+
+        async function updateGauge() {
+            const apiData = await fetchData();
+            if (!apiData) return;
+
+            const score = Math.round(apiData.score);
+            const category = getCategory(score);
+            
+            // Update needle and value
+            updateNeedle(score);
+
+            // Update category label
+            const categoryElement = document.getElementById('categoryLabel');
+            categoryElement.textContent = category.label;
+            categoryElement.style.backgroundColor = category.color;
+
+            // Update timestamp
+            const timestamp = new Date(apiData.timestamp);
+            document.getElementById('lastUpdated').textContent = 
+                `Last updated: ${timestamp.toLocaleString()}`;
+        }
+
+        // Initial update
+        updateGauge();
+        
+        // Update on window resize
+        window.addEventListener('resize', () => {
+            // D3 handles responsive resizing automatically with viewBox
+        });
+
+        // Update every minute
+        setInterval(updateGauge, 60000);
+    </script>
+</body>
+</html>

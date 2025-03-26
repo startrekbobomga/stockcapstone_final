@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stock Data</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <!-- Add Chart.js -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="stockData"></div>
+  <script>
+    window.onload = async function() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const ticker = urlParams.get('symbol');
+
+      if (!ticker) {
+        alert('No stock symbol provided.');
+        return;
+      }
+
+      try {
+        // Make the API call to fetch stock data
+        const response = await fetch(`http://localhost:5000/api/stock/${ticker}`);
+        const data = await response.json();
+
+        if (response.ok) {
+          console.log(data);
+          // Store the fetched data in localStorage for later use
+          localStorage.setItem('stockData', JSON.stringify(data));
+          // Pass the ticker name to the displayStockData function
+          displayStockData(ticker, data);
+        } else {
+          alert(data.message || 'Stock data not found.');
+        }
+      } catch (error) {
+        console.error('Error fetching stock data:', error);
+        alert('Error fetching stock data');
+      }
+    }
+
+    // Function to display stock data in a table with the ticker name above it
+    function displayStockData(ticker, data) {
+      const stockDataDiv = document.getElementById('stockData');
+
+      // Start building the HTML with a heading that shows the ticker
+      let tableHtml = `<h2>${ticker.toUpperCase()}</h2>`; // Display ticker in uppercase
+
+      if (data.length === 0) {
+        stockDataDiv.innerHTML = '<p>No data available for this symbol.</p>';
+        return;
+      }
+
+      tableHtml += `<table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Open</th>
+            <th>High</th>
+            <th>Low</th>
+            <th>Close</th>
+            <th>Volume</th>
+            <th>Dividends</th>
+            <th>Stock Splits</th>
+          </tr>
+        </thead>
+        <tbody>`;
+
+      // Loop through the data and generate rows
+      data.forEach(item => {
+        tableHtml += `
+          <tr>
+            <td>${new Date(item.Date).toLocaleDateString()}</td>
+            <td>${item.Open}</td>
+            <td>${item.High}</td>
+            <td>${item.Low}</td>
+            <td>${item.Close}</td>
+            <td>${item.Volume}</td>
+            <td>${item.Dividends}</td>
+            <td>${item['Stock Splits']}</td>
+          </tr>`;
+      });
+
+      tableHtml += `</tbody></table>`;
+      stockDataDiv.innerHTML = tableHtml;
+    }
+  </script>
+</body>
+</html>

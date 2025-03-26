@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stock Tickers</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 600px;
+      margin: 50px auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+      gap: 10px;
+      padding: 0;
+    }
+    .grid-item {
+      display: flex;
+      align-items: center;
+      background: #007bff;
+      color: #fff;
+      padding: 10px;
+      border-radius: 4px;
+      text-align: center;
+      flex-direction: column;
+    }
+    img {
+      width: 60px;
+      height: 60px;
+      margin-bottom: 10px;
+      border-radius: 50%;
+      border: 2px solid #fff;
+    }
+    .grid-item:hover {
+      background: #0056b3;
+    }
+    .error {
+      color: red;
+      text-align: center;
+    }
+    .back-button {
+      display: block;
+      background-color: #28a745;
+      color: white;
+      padding: 10px 20px;
+      margin-bottom: 20px;
+      text-align: center;
+      border-radius: 4px;
+      cursor: pointer;
+      text-decoration: none;
+      width: 100px;
+      margin: 0 auto;
+    }
+    .back-button:hover {
+      background-color: #218838;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Stock Tickers</h1>
+    <div id="tickerGrid" class="grid"></div>
+    <p id="error" class="error"></p>
+
+    <!-- Back button -->
+    <a href="javascript:history.back()" class="back-button">Back</a>
+  </div>
+
+  <script>
+    // Function to fetch the logo URL for a ticker using the provided Parqet link
+    function getLogo(ticker) {
+      const logoUrl = `https://assets.parqet.com/logos/symbol/${ticker}?format=jpg&size=300`;
+      return logoUrl;
+    }
+
+    // Fetch the tickers from the API and display them with logos
+    async function fetchTickers() {
+      try {
+        const response = await fetch('http://localhost:5000/api/tickers');
+        if (!response.ok) throw new Error('Failed to fetch data');
+        
+        const data = await response.json();
+        const tickerGrid = document.getElementById('tickerGrid');
+        tickerGrid.innerHTML = ''; // Clear any previous content
+
+        for (const ticker of data.tickers) {
+          const gridItem = document.createElement('div');
+          gridItem.classList.add('grid-item');
+          
+          // Fetch the logo for the ticker dynamically
+          const logoUrl = getLogo(ticker);
+
+          // Create an image element for the logo
+          const logo = document.createElement('img');
+          logo.src = logoUrl;
+          logo.alt = `${ticker} logo`;
+
+          // Add ticker name
+          const textNode = document.createTextNode(ticker);
+
+          gridItem.appendChild(logo);
+          gridItem.appendChild(textNode);
+          tickerGrid.appendChild(gridItem);
+        }
+      } catch (error) {
+        const errorMessage = document.getElementById('error');
+        errorMessage.textContent = error.message;
+      }
+    }
+
+    // Load tickers on page load
+    window.onload = fetchTickers;
+  </script>
+</body>
+</html>

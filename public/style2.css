@@ -1,0 +1,30 @@
+/* Add this to your style.css */
+
+/* Wrapper for header and back link */
+.header-container {
+    display: flex;
+    align-items: center; /* Vertically align items in the center */
+    justify-content: space-between; /* Distribute space between items */
+    margin-bottom: 20px; /* Add some space below the header */
+  }
+  
+  /* Style for the heading */
+  h1 {
+    margin: 0; /* Remove any default margin */
+    font-size: 2em;
+  }
+  
+  .back-link {
+    display: inline-block;
+    margin-top: 30px;
+    padding: 10px 20px;
+    background-color: #4CAF50;
+    color: white;
+    text-decoration: none;
+    border-radius: 5px;
+  }
+  
+  .back-link:hover {
+    background-color: #45a049;
+  }
+  

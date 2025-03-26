@@ -1,0 +1,94 @@
+/* General Styles for news.html */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 20px;
+    color: #333;
+  }
+  
+  .news-container {
+    background-color: white;
+    padding: 20px;
+    margin: 0 auto;
+    max-width: 800px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  h2 {
+    color: #4CAF50;
+    font-size: 24px;
+    margin-bottom: 20px;
+  }
+  
+  .news-item {
+    border-bottom: 1px solid #ddd;
+    padding: 10px 0;
+    margin-bottom: 15px;
+  }
+  
+  .news-title {
+    font-size: 18px;
+    color: #007BFF;
+  }
+  
+  .news-title a {
+    text-decoration: none;
+    color: inherit;
+  }
+  
+  .news-title a:hover {
+    text-decoration: underline;
+  }
+  
+  .news-link {
+    font-size: 14px;
+    color: #555;
+  }
+  
+  .news-link a {
+    text-decoration: none;
+    color: #007BFF;
+  }
+  
+  .news-link a:hover {
+    text-decoration: underline;
+  }
+  
+  .back-link {
+    display: inline-block;
+    margin-top: 30px;
+    padding: 10px 20px;
+    background-color: #4CAF50;
+    color: white;
+    text-decoration: none;
+    border-radius: 5px;
+  }
+  
+  .back-link:hover {
+    background-color: #45a049;
+  }
+  
+  .news-item:last-child {
+    border-bottom: none;
+  }
+  
+  @media (max-width: 600px) {
+    .news-container {
+      padding: 10px;
+    }
+  
+    h2 {
+      font-size: 20px;
+    }
+  
+    .news-title {
+      font-size: 16px;
+    }
+  
+    .news-link {
+      font-size: 12px;
+    }
+  }
+  

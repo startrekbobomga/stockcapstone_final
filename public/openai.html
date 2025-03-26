@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat with AI</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+    
+        #chat-container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+    
+        .message {
+            margin: 10px 0;
+            padding: 10px 15px;
+            border-radius: 15px;
+            max-width: 75%;
+            word-wrap: break-word;
+            line-height: 1.5;
+        }
+    
+        /* User message styling (blue bubble) */
+        .message.user {
+            text-align: right;
+            background-color: #f5f5f5; /* Light grey for user message bubble */
+            color: black;
+            margin-left: auto; /* Align to the right */
+        }
+    
+        /* Bot message styling (grey bubble) */
+        .message.bot {
+            text-align: left;
+            background-color: #f5f5f5; /* Light grey for bot message bubble */
+            color: black;
+            margin-right: auto; /* Align to the left */
+            white-space: pre-wrap; /* Preserves whitespace and line breaks */
+            font-family: Arial, sans-serif;
+            line-height: 1.5;
+        }
+    
+        input[type="text"] {
+            width: 80%;
+            padding: 10px;
+            margin-right: 10px;
+        }
+    
+        button {
+            padding: 10px 20px;
+        }
+    </style>    
+</head>
+<body>
+    <h1> Welcome to OpenAI </h1>
+    <div id="chat-container">
+        <div id="chat-log"></div>
+        <div>
+            <input type="text" id="user-input" placeholder="Type your message here..." />
+            <button onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <script>
+        async function sendMessage() {
+            const userInput = document.getElementById('user-input');
+            const chatLog = document.getElementById('chat-log');
+
+            const message = userInput.value;
+            if (!message.trim()) return;
+
+            // Add user message to chat log
+            const userMessage = document.createElement('div');
+            userMessage.classList.add('message', 'user');
+            userMessage.textContent = message;
+            chatLog.appendChild(userMessage);
+
+            // Clear input field
+            userInput.value = '';
+
+            // Send message to backend
+            const response = await fetch('http://localhost:5000/openai', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message })
+            });
+
+            const data = await response.json();
+
+            if (data.response) {
+                // Add bot response to chat log
+                const botMessage = document.createElement('div');
+                botMessage.classList.add('message', 'bot');
+                botMessage.textContent = data.response;
+                chatLog.appendChild(botMessage);
+            } else {
+                alert('Error: ' + (data.error || 'Unknown error'));
+            }
+        }
+    </script>
+</body>
+</html>
