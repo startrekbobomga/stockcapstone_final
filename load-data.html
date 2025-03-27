@@ -92,17 +92,17 @@
     try {
         // Run all fetch requests in parallel
         const [historicalResponse, newsResponse, statResponse] = await Promise.all([
-            fetch("/api/run-python-gather-data", {
+            fetch("https://startrekbobomga-stockcapstone-final.onrender.com/api/run-python-gather-data", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ stockSymbols }),
             }),
-            fetch("/api/run-python-gather-news", {
+            fetch("https://startrekbobomga-stockcapstone-final.onrender.com/api/run-python-gather-news", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ stockSymbols }),
             }),
-            fetch("/api/run-python-gather-stat", {
+            fetch("https://startrekbobomga-stockcapstone-final.onrender.com/api/run-python-gather-stat", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ stockSymbols }),
